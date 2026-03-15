@@ -65,6 +65,14 @@ get_total_traffic() {
     echo $((saved + current))
 }
 
+format_bytes() {
+    awk -v b="$1" 'BEGIN {
+        if (b < 1073741824) printf "%.2f MB", b/1048576;
+        else if (b < 1099511627776) printf "%.2f GB", b/1073741824;
+        else printf "%.2f TB", b/1099511627776;
+    }'
+}
+
 # ==========================================
 # 后台定时推送模块
 # ==========================================
@@ -82,9 +90,12 @@ if [ "$1" == "push" ] || [ "$1" == "push_test" ]; then
                 REMARK=$(echo $TAG | cut -d'_' -f1)
                 total_bytes=$(get_total_traffic "$TAG")
                 TOTAL_ALL_BYTES=$((TOTAL_ALL_BYTES + total_bytes))
-                MESSAGE+="🔹 端口: ${p} | 备注: ${REMARK} | 已用: $((total_bytes / 1048576)) MB%0A"
+                
+                formatted_total=$(format_bytes "$total_bytes")
+                MESSAGE+="🔹 端口: ${p} | 备注: ${REMARK} | 已用: ${formatted_total}%0A"
             done
-            MESSAGE+="-------------------------%0A🌟 <b>总计已用: $((TOTAL_ALL_BYTES / 1048576)) MB</b>%0A"
+            formatted_all=$(format_bytes "$TOTAL_ALL_BYTES")
+            MESSAGE+="-------------------------%0A🌟 <b>总计已用: ${formatted_all}</b>%0A"
         fi
         MESSAGE+="=========================%0A⏰ 播报时间: $(date +"%Y-%m-%d %H:%M:%S")"
         
@@ -224,7 +235,7 @@ view_nodes() {
 view_traffic() {
     clear
     echo "=========================================================="
-    printf " %-10s | %-20s | %-15s \n" "端口号" "节点备注" "累计流量 (MB)"
+    printf " %-10s | %-20s | %-15s \n" "端口号" "节点备注" "累计流量"
     echo "=========================================================="
     TOTAL_ALL_BYTES=0
     PORTS=$(jq -r '.inbounds[] | select(.tag != "api" and .tag != null) | .port' $CONFIG_FILE 2>/dev/null)
@@ -233,10 +244,13 @@ view_traffic() {
         REMARK=$(echo $TAG | cut -d'_' -f1)
         total_bytes=$(get_total_traffic "$TAG")
         TOTAL_ALL_BYTES=$((TOTAL_ALL_BYTES + total_bytes))
-        printf " %-10s | %-20s | %-15s \n" "$p" "$REMARK" "$((total_bytes / 1048576)) MB"
+        
+        formatted_total=$(format_bytes "$total_bytes")
+        printf " %-10s | %-20s | %-15s \n" "$p" "$REMARK" "$formatted_total"
     done
     echo "----------------------------------------------------------"
-    printf " %-10s | %-20s | ${GREEN}%-15s${PLAIN} \n" "所有节点" "🌟 累计总计" "$((TOTAL_ALL_BYTES / 1048576)) MB"
+    formatted_all=$(format_bytes "$TOTAL_ALL_BYTES")
+    printf " %-10s | %-20s | ${GREEN}%-15s${PLAIN} \n" "所有节点" "🌟 累计总计" "$formatted_all"
     echo "=========================================================="
     read -n 1 -s -r -p "按任意键返回..."
 }
@@ -269,11 +283,9 @@ setup_tg() {
     echo -e "              ${GREEN}设置 TG 定时通知推送${PLAIN}"
     echo "=================================================="
     
-    # 动态获取当前 TG 推送状态
     CURRENT_TG_CRON=$(crontab -l 2>/dev/null | grep "ss2022 push" | grep -v "push_test")
     if [ -n "$CURRENT_TG_CRON" ] && [ -f "$TG_CONF" ]; then
         source "$TG_CONF"
-        # 提取定时任务里的间隔小时数
         INTERVAL_HOURS=$(echo "$CURRENT_TG_CRON" | awk '{print $2}' | sed 's/\*//g' | sed 's/\///g')
         [ -z "$TG_TITLE" ] && TG_TITLE="多端口 SS-2022 流量统计"
         
