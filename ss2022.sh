@@ -258,6 +258,23 @@ setup_tg() {
     echo "=================================================="
     echo -e "              ${GREEN}设置 TG 定时通知推送${PLAIN}"
     echo "=================================================="
+    
+    # 动态获取当前 TG 推送状态
+    CURRENT_TG_CRON=$(crontab -l 2>/dev/null | grep "ss2022 push" | grep -v "push_test")
+    if [ -n "$CURRENT_TG_CRON" ] && [ -f "$TG_CONF" ]; then
+        source "$TG_CONF"
+        # 提取定时任务里的间隔小时数
+        INTERVAL_HOURS=$(echo "$CURRENT_TG_CRON" | awk '{print $2}' | sed 's/\*//g' | sed 's/\///g')
+        [ -z "$TG_TITLE" ] && TG_TITLE="多端口 SS-2022 流量统计"
+        
+        echo -e "当前状态：${GREEN}已开启${PLAIN}"
+        echo -e "推送间隔：${GREEN}每 $INTERVAL_HOURS 小时${PLAIN}"
+        echo -e "推送标题：${GREEN}${TG_TITLE}${PLAIN}"
+    else
+        echo -e "当前状态：${RED}未设置定时推送${PLAIN}"
+    fi
+    echo "--------------------------------------------------"
+    
     read -p "Bot Token (直接回车返回主菜单, 输入 0 关闭推送): " NEW_TOKEN
     
     [ -z "$NEW_TOKEN" ] && return
@@ -300,7 +317,7 @@ setup_reset() {
     CURRENT_TASK=$(crontab -l 2>/dev/null | grep "ss2022_reset")
     if [ -n "$CURRENT_TASK" ]; then
         DAY=$(echo "$CURRENT_TASK" | awk '{print $3}')
-        echo -e "当前设置：${GREEN}每月 $DAY 号${PLAIN} 自动重置流量"
+        echo -e "当前状态：${GREEN}每月 $DAY 号自动重置流量${PLAIN}"
     else
         echo -e "当前状态：${RED}未设置定时重置${PLAIN}"
     fi
@@ -311,7 +328,7 @@ setup_reset() {
     
     crontab -l 2>/dev/null | grep -v "ss2022_reset" | crontab -
     if [ "$RESET_DAY" == "0" ]; then
-        echo "已关闭重置任务"
+        echo -e "${GREEN}已关闭重置任务${PLAIN}"
     elif [[ "$RESET_DAY" =~ ^[0-9]+$ ]] && [ "$RESET_DAY" -ge 1 ] && [ "$RESET_DAY" -le 28 ]; then
         (crontab -l 2>/dev/null; echo "0 0 $RESET_DAY * * systemctl restart xray && rm -f $TRAFFIC_DB # ss2022_reset") | crontab -
         echo -e "${GREEN}设置成功！每月 $RESET_DAY 号清零。${PLAIN}"
