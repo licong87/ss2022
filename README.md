@@ -22,4 +22,4 @@ ss2022多端口管理及流量监控通知
 使用 SSH 登录你的 VPS (推荐使用 Debian/Ubuntu 纯净系统)，复制并运行以下命令：
 
 ```bash
-bash <(curl -Ls [https://raw.githubusercontent.com/licong87/ss2022.sh/main/ss2022.sh]
+bash <(curl -Ls https://raw.githubusercontent.com/licong87/ss2022/main/ss2022.sh)
