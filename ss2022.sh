@@ -109,8 +109,13 @@ install_deps() {
 }
 
 get_ips() {
-    IPV4=$(curl -s4m2 https://v4.ident.me || curl -s4m2 https://api.ipify.org)
+    IPV4=$(curl -s4m2 https://v4.ident.me || curl -s4m2 https://api.ipify.org || curl -s4m2 https://icanhazip.com)
+    IPV6=$(curl -s6m2 https://v6.ident.me || curl -s6m2 https://api64.ipify.org || curl -s6m2 https://icanhazip.com)
     IPV4=$(echo "$IPV4" | tr -d '[:space:]')
+    IPV6=$(echo "$IPV6" | tr -d '[:space:]')
+    
+    [[ ! "$IPV4" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && IPV4=""
+    [[ ! "$IPV6" =~ : ]] && IPV6=""
 }
 
 install_core() {
@@ -186,6 +191,7 @@ add_node() {
 }
 
 view_nodes() {
+    echo -e "${GREEN}正在获取双栈 IP 信息，请稍候...${PLAIN}"
     get_ips
     clear
     echo "=================================================="
@@ -198,14 +204,18 @@ view_nodes() {
         
         echo -e "${GREEN}Shadowsocks 2022 配置 [备注: $REMARK]${PLAIN}"
         echo "——————————————————————————————————"
-        echo " 地址：$IPV4"
+        [ -n "$IPV4" ] && echo " IPv4地址：$IPV4"
+        [ -n "$IPV6" ] && echo " IPv6地址：$IPV6"
         echo " 端口：$p"
         echo " 密码：$PWD"
         echo " 加密：2022-blake3-aes-128-gcm"
         echo " TFO ：true"
         echo "——————————————————————————————————"
-        echo -e " IPv4 链接：${GREEN}ss://${USER_INFO}@${IPV4}:${p}#${REMARK}${PLAIN}"
-        echo -e " Surge 配置：${GREEN}${REMARK} = ss, ${IPV4}, ${p}, encrypt-method=2022-blake3-aes-128-gcm, password=${PWD}, tfo=true, udp-relay=true${PLAIN}"
+        [ -n "$IPV4" ] && echo -e " IPv4 链接：${GREEN}ss://${USER_INFO}@${IPV4}:${p}#${REMARK}${PLAIN}"
+        [ -n "$IPV6" ] && echo -e " IPv6 链接：${GREEN}ss://${USER_INFO}@[${IPV6}]:${p}#${REMARK}${PLAIN}"
+        echo ""
+        [ -n "$IPV4" ] && echo -e " Surge (v4)：${GREEN}${REMARK} = ss, ${IPV4}, ${p}, encrypt-method=2022-blake3-aes-128-gcm, password=${PWD}, tfo=true, udp-relay=true${PLAIN}"
+        [ -n "$IPV6" ] && echo -e " Surge (v6)：${GREEN}${REMARK}-v6 = ss, ${IPV6}, ${p}, encrypt-method=2022-blake3-aes-128-gcm, password=${PWD}, tfo=true, udp-relay=true${PLAIN}"
         echo "=================================================="
     done
     read -n 1 -s -r -p "按回车键返回主菜单..."
