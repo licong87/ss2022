@@ -14,19 +14,7 @@ ss2022多端口管理及流量监控通知
 * 📅 **定时清零**：支持设定每月指定日期（1-28号）自动重置所有流量数据，方便按月算账。
 * ⚡ **全局快捷指令**：首次运行后自动注册系统全局命令，随时随地输入 `ss2022` 即可呼出管理菜单。
 * 🔗 **一键分享**：自动生成 `ss://` 标准订阅链接与 Surge 配置规则，极大降低车友导入门槛。
-
 ---
-
-## 🛠️ 一键安装
-
-使用 SSH 登录你的 VPS (推荐使用 Debian/Ubuntu 纯净系统)，复制并运行以下命令：
-
-```bash
-bash <(curl -Ls https://raw.githubusercontent.com/licong87/ss2022/main/ss2022.sh)
-```
----
-
-
 ## 🖥️ 菜单预览
 
 ```text
@@ -52,3 +40,12 @@ bash <(curl -Ls https://raw.githubusercontent.com/licong87/ss2022/main/ss2022.sh
  14. 退出 脚本管理界面
 ==================================================
  当前状态: 已安装 | 已启动
+
+## 🛠️ 一键安装
+
+使用 SSH 登录你的 VPS (推荐使用 Debian/Ubuntu 纯净系统)，复制并运行以下命令：
+
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/licong87/ss2022/main/ss2022.sh)
+```
+---
